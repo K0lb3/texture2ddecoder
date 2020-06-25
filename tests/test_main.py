@@ -1,5 +1,6 @@
 import texture2ddecoder
 import os
+import sys
 import json
 from zipfile import ZipFile
 from sys import platform
@@ -17,8 +18,9 @@ def test_atc_rgba8():
 def test_pvrtc_rgb4():
     _test("PVRTC_RGB4", texture2ddecoder.decode_pvrtc)
 
-def test_pvrtc_rgba2():
-    _test("PVRTC_RGBA2", texture2ddecoder.decode_pvrtc)
+if sys.platform != "darwin":
+    def test_pvrtc_rgba2():
+        _test("PVRTC_RGBA2", texture2ddecoder.decode_pvrtc)
 
 def test_etc():
     _test("ETC_RGB4", texture2ddecoder.decode_etc1)

@@ -19,11 +19,27 @@
 #include <stdio.h>
 #ifdef _WIN32
 #include <memory.h>
-#else
-#include <malloc.h>
 #endif
 #include <stdarg.h>
 #include <new>  // needed for placement new, _msize, _expand
+
+/* edit for Mac & Linux */
+
+//memcpy fix
+#include <cstring>
+using namespace std; 
+
+// malloc_useable_size fix
+#if defined(__APPLE__)
+#include <malloc/malloc.h>
+#define malloc_usable_size malloc_size
+#else
+#include <malloc.h>
+#ifdef _WIN32
+#define malloc_usable_size _msize
+#endif
+#endif
+/* end edit*/
 
 #define CRND_RESTRICT __restrict
 

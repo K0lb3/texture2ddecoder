@@ -18,6 +18,7 @@ jobs:
           "3.7",
           "3.6",
         ]
+        compiler: ["gcc"]
         architecture: ["x86", "x64"]
     
     timeout-minutes: 30

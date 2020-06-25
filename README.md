@@ -3,9 +3,12 @@
 [![PyPI supported Python versions](https://img.shields.io/pypi/pyversions/UnityPy.svg)](https://pypi.python.org/pypi/texture2ddecoder)
 [![Win/Mac/Linux](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-informational)]()
 [![MIT](https://img.shields.io/pypi/l/UnityPy.svg)](https://github.com/K0lb3/texture2ddecoder/blob/master/LICENSE)
+[![Build Status](https://travis-ci.com/K0lb3/texture2ddecoder.svg?branch=master)](https://travis-ci.com/K0lb3/texture2ddecoder)
 [![Build Status (Github)](https://github.com/K0lb3/texture2ddecoder/workflows/Test%20and%20Publish/badge.svg?branch=master)](https://github.com/K0lb3/texture2ddecoder/actions?query=workflow%3A%22Test+and+Publish%22)
 
 A python wrapper for [Perfare](https://github.com/Perfare)'s [Texture2DDecoder](https://github.com/Perfare/AssetStudio/tree/master/Texture2DDecoder)
+
+Some changes were made to the original code to make it cross-platform compatible.
 
 1. [Installation](https://github.com/K0lb3/texture2ddecoder#installation)
 2. [Example](https://github.com/K0lb3/texture2ddecoder#example)
@@ -14,7 +17,7 @@ A python wrapper for [Perfare](https://github.com/Perfare)'s [Texture2DDecoder](
 ## Installation
 
 ```cmd
-pip install tex2img
+pip install texture2ddecoder
 ```
 
 or download/clone the git and use
@@ -42,15 +45,10 @@ decoded_data= texture2ddecoder.decode_astc(data, width, height, block_width, blo
 dec_img = Image.frombytes("RGBA", (width, height), decoded_data, 'raw', ("BGRA"))
 ```
 
-or download/clone the git and use
-
-```cmd
-python setup.py install
-```
-
 ## Functions
 
-* All functions accept only args and aren't able to handle kwards atm.
+* All functions accept only arguments, no keywords.
+* decode_pvrtc can cause segfaults on Mac OS
 
 #### decode_bc1
 
