@@ -122,11 +122,11 @@ static PyObject *_decode_pvrtc(PyObject *self, PyObject *args)
     uint32_t width, height;
     bool is2bpp = 0;
 
-    if (!PyArg_ParseTuple(args, "y#ii|p", &data, &data_size, &width, &height, &is2bpp))
+    if (!PyArg_ParseTuple(args, "y#ii|b", &data, &data_size, &width, &height, &is2bpp))
         return NULL;
 
     // reserve return image
-    uint32_t *buf = (uint32_t *)malloc(width * height * 4); // always RGBA
+    uint32_t *buf = (uint32_t *)malloc(width * height * 4); // always BGRA
 
     if (buf == NULL)
         return PyErr_NoMemory();

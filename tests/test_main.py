@@ -16,11 +16,10 @@ def test_atc_rgba8():
     _test("ATC_RGBA8", texture2ddecoder.decode_atc_rgba8)
 
 def test_pvrtc_rgb4():
-    _test("PVRTC_RGB4", texture2ddecoder.decode_pvrtc)
+    _test("PVRTC_RGB4", texture2ddecoder.decode_pvrtc, False)
 
-if sys.platform != "darwin":
-    def test_pvrtc_rgba2():
-        _test("PVRTC_RGBA2", texture2ddecoder.decode_pvrtc)
+def test_pvrtc_rgba2():
+    _test("PVRTC_RGBA2", texture2ddecoder.decode_pvrtc, True)
 
 def test_etc():
     _test("ETC_RGB4", texture2ddecoder.decode_etc1)
@@ -58,7 +57,7 @@ def test_astc():
         # compare images
         #assert(ImageChops.difference(ori_img, dec_img).getbbox() is None)
 
-def _test(name, func):
+def _test(name, func, extra_arg=None):
     # load sample data
     data : bytes= zip.open(name+".data", "r").read()
     details : dict = json.loads(zip.open(name+".json", "r").read())
@@ -67,8 +66,11 @@ def _test(name, func):
     # decompress data
     width = details["m_Width"]
     height = details["m_Height"]
-    dec = func(data, width, height)
-
+    if extra_arg == None:
+        dec = func(data, width, height)
+    else:
+        dec = func(data, width, height, extra_arg)
+    
     # load raw image data
     dec_img = Image.frombytes("RGBA", (width, height), dec, 'raw', ("BGRA"))
     dec_img = dec_img.convert(ori_img.mode)

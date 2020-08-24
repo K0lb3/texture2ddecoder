@@ -8,7 +8,7 @@ setup(
     name="texture2ddecoder",
     description="a python wrapper for Perfare's Texture2DDecoder",
     author="K0lb3",
-    version="1.0.1",
+    version="1.0.2",
     keywords=["astc", "atc", "pvrtc", "etc", "crunch", "dxt", "bcn", "eacr"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
