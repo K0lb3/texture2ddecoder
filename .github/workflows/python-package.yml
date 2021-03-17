@@ -1,4 +1,4 @@
-name: CI
+name: Windows & Mac Build
 
 on: [push, pull_request]
 
@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macOS-latest', 'windows-latest']
+        os: ['macOS-latest', 'windows-latest']
         python-version: ['3.8', '3.7', '3.6']
         compiler: ['gcc']
         architecture: ['x86', 'x64']
@@ -80,3 +80,39 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           twine upload dist/* --skip-existing
+
+  manylinux:
+    if: success() && github.event_name == 'push'
+    needs: [deploy]
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        compiler: ['gcc']
+
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade setuptools wheel pytest twine pillow
+
+      - name: Build wheels
+        uses: joerick/cibuildwheel@v1.10.0
+        env:
+          CIBW_BUILD: cp36-manylinux_x86_64 cp36-manylinux_i686	cp37-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp38-manylinux_i686 cp39-manylinux_x86_64 cp39-manylinux_i686
+      
+      - name: Publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload dist/* --skip-existing
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
