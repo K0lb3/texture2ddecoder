@@ -1,4 +1,4 @@
-name: CI
+name: Windows & Mac Build
 
 on: [push, pull_request]
 
@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macOS-latest', 'windows-latest']
+        os: ['macOS-latest', 'windows-latest']
         python-version: ['3.8', '3.7', '3.6']
         compiler: ['gcc']
         architecture: ['x86', 'x64']
