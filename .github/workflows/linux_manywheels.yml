@@ -26,7 +26,7 @@ jobs:
           CIBW_BUILD: cp36-manylinux_x86_64 cp36-manylinux_i686	cp37-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp38-manylinux_i686 cp39-manylinux_x86_64 cp39-manylinux_i686
 
       - name: Install Module for tests
-        runs: python setup.py install
+        run: python setup.py install
 
       - name: Run tests
         run: pytest -v -s
