@@ -35,6 +35,14 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
+          
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_aarch64
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_ppc64le
+
         exclude:
           - os: macos-latest
             bitness: 32
@@ -44,6 +52,10 @@ jobs:
             manylinux_image: manylinux1
           - os: macos-latest
             manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux2010
+          - os: macos-latest
+            manylinux_image: manylinux_x_y
     
     steps:
       - uses: actions/checkout@v2
