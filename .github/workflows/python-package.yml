@@ -101,10 +101,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade setuptools wheel pytest twine pillow
 
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: joerick/cibuildwheel@v2.3.0
         env:
-          CIBW_BUILD: cp36-manylinux_x86_64 cp36-manylinux_i686	cp37-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp38-manylinux_i686 cp39-manylinux_x86_64 cp39-manylinux_i686
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_BUILD: |
+            cp36-manylinux_x86_64 cp36-manylinux_i686 cp36-manylinux_aarch64 
+            cp37-manylinux_x86_64 cp37-manylinux_i686 cp37-manylinux_aarch64 
+            cp38-manylinux_x86_64 cp38-manylinux_i686 cp38-manylinux_aarch64 
+            cp39-manylinux_x86_64 cp39-manylinux_i686 cp39-manylinux_aarch64 
+            cp310-manylinux_x86_64 cp310-manylinux_i686 cp310-manylinux_aarch64
       
       - name: Publish
         env:
@@ -112,6 +124,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           twine upload dist/* --skip-existing
+          twine upload ./wheelhouse/*.whl --skip-existing
 
       - uses: actions/upload-artifact@v2
         with:
