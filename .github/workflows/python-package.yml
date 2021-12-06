@@ -127,7 +127,6 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload dist/* --skip-existing
           twine upload ./wheelhouse/*.whl --skip-existing
 
       - uses: actions/upload-artifact@v2
