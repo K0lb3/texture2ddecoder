@@ -1,5 +1,6 @@
 from setuptools import setup, Extension, find_packages
 import os
+import platform
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -8,7 +9,7 @@ setup(
     name="texture2ddecoder",
     description="a python wrapper for Perfare's Texture2DDecoder",
     author="K0lb3",
-    version="1.0.2",
+    version="1.0.4",
     keywords=["astc", "atc", "pvrtc", "etc", "crunch", "dxt", "bcn", "eacr"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
@@ -37,7 +38,8 @@ setup(
             ],
             language="c++",
             include_dirs=["src/Texture2DDecoder"],
-            extra_compile_args=["-std=c++11"],
+            extra_compile_args=["-std=c++11"]
+            + (["-fms-extensions"] if platform.system() == "Darwin" else []),
         )
     ],
 )
