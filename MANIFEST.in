@@ -2,3 +2,4 @@ recursive-include src *.cpp
 recursive-include src *.cxx
 recursive-include src *.h
 recursive-include src *.inc
+recursive-include tests
