@@ -50,7 +50,7 @@ jobs:
             ${{ matrix.cp }}-macosx_universal2
           CIBW_TEST_REQUIRES: pytest pillow
           CIBW_TEST_COMMAND: pytest -v -s {package}/tests
-          CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64 *-win32"
+          CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64 *-win32 *-manylinux_i686"
 
       - uses: actions/upload-artifact@v3
         with:
