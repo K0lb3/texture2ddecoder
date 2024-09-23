@@ -22,20 +22,18 @@ jobs:
 
   build_wheels:
     needs: [test]
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13]
-        cp: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
-
-    name: Build ${{ matrix.cp }} wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-      
+          recursive: true
+
       - name: Set up QEMU
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
@@ -43,27 +41,20 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v2.20
+        uses: pypa/cibuildwheel@v2.21.1
         env:
+          # configure cibuildwheel to build native archs ('auto'), and some
+          # emulated ones
           CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_ARCHS_MACOS: x86_64 arm64 universal2
-          CIBW_BUILD: |
-            ${{ matrix.cp }}-manylinux_x86_64
-            ${{ matrix.cp }}-manylinux_i686
-            ${{ matrix.cp }}-manylinux_aarch64
-            ${{ matrix.cp }}-win_amd64
-            ${{ matrix.cp }}-win32
-            ${{ matrix.cp }}-macosx_x86_64
-            ${{ matrix.cp }}-macosx_arm64
-            ${{ matrix.cp }}-macosx_universal2
           CIBW_TEST_REQUIRES: pytest pillow
           CIBW_TEST_COMMAND: pytest -v -s {package}/tests
           CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64 *-win32 *-manylinux_i686"
 
       - uses: actions/upload-artifact@v4
         with:
-          overwrite: true
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+          overwrite: true
 
   build_sdist:
     name: Build source distribution
@@ -91,6 +82,7 @@ jobs:
         with:
           name: artifact
           path: dist
+          merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
