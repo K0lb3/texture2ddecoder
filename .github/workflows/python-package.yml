@@ -3,39 +3,63 @@ name: Build & Publish wheels
 on: [push, pull_request]
 
 jobs:
-  build_sdist:
-    name: Build source distribution
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install
+        run: pip install .
+
+      - name: Install dependencies
+        run: pip install pytest pillow
+
+      - name: Test
+        run: pytest -vs ./tests
+
+  build_sdist:
+    name: Build source distribution
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
 
   build_wheels:
+    needs: [test]
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macOS-11]
-        cp: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, windows-latest, macos-13]
+        cp: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
 
     name: Build ${{ matrix.cp }} wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v2.16.2
+        uses: joerick/cibuildwheel@v2.20
         env:
           CIBW_ARCHS_LINUX: auto aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64 universal2
@@ -52,7 +76,7 @@ jobs:
           CIBW_TEST_COMMAND: pytest -v -s {package}/tests
           CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64 *-win32 *-manylinux_i686"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
 
@@ -69,5 +93,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          skip_existing: tru
           password: ${{ secrets.PYPI_TOKEN }}
           skip_existing: true
