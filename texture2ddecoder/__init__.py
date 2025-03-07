@@ -25,4 +25,6 @@ from ._texture2ddecoder import (
     decode_eacrg_signed as decode_eacrg_signed,
     decode_astc as decode_astc,
     decode_pvrtc as decode_pvrtc,
+    unpack_crunch as unpack_crunch,
+    unpack_unity_crunch as unpack_unity_crunch,
 )
