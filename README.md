@@ -3,8 +3,7 @@
 [![PyPI supported Python versions](https://img.shields.io/pypi/pyversions/UnityPy.svg)](https://pypi.python.org/pypi/texture2ddecoder)
 [![Win/Mac/Linux](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-informational)]()
 [![MIT](https://img.shields.io/pypi/l/UnityPy.svg)](https://github.com/K0lb3/texture2ddecoder/blob/master/LICENSE)
-[![Build Status](https://travis-ci.com/K0lb3/texture2ddecoder.svg?branch=master)](https://travis-ci.com/K0lb3/texture2ddecoder)
-[![Build Status (Github)](https://github.com/K0lb3/texture2ddecoder/workflows/Test%20and%20Publish/badge.svg?branch=master)](https://github.com/K0lb3/texture2ddecoder/actions?query=workflow%3A%22Test+and+Publish%22)
+[![Build Status](https://github.com/K0lb3/texture2ddecoder/actions/workflows/test.yml/badge.svg)](https://github.com/K0lb3/texture2ddecoder/actions/workflows/test.yml)
 
 A python wrapper for [Perfare](https://github.com/Perfare)'s [Texture2DDecoder](https://github.com/Perfare/AssetStudio/tree/master/Texture2DDecoder)
 
