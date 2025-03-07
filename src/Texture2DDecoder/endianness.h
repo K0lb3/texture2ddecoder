@@ -31,40 +31,75 @@
 
 /* Detect platform endianness at compile time */
 
-// If boost were available on all platforms, could use this instead to detect endianness
-// #include <boost/predef/endian.h>
-
-// When available, these headers can improve platform endianness detection
-#ifdef __has_include  // C++17, supported as extension to C++11 in clang, GCC 5+, vs2015
-#if __has_include(<endian.h>)
-#include <endian.h>  // gnu libc normally provides, linux
-#elif __has_include(<machine/endian.h>)
-#include <machine/endian.h>  //open bsd, macos
-#elif __has_include(<sys/param.h>)
-#include <sys/param.h>  // mingw, some bsd (not open/macos)
-#elif __has_include(<sys/isadefs.h>)
-#include <sys/isadefs.h>  // solaris
+// Cross-platform header discovery using __has_include
+#ifdef __has_include
+#  if __has_include(<endian.h>)
+#    include <endian.h>          // GLIBC (Linux), BSDs
+#  elif __has_include(<sys/endian.h>)
+#    include <sys/endian.h>      // OpenBSD, newer macOS
+#  elif __has_include(<machine/endian.h>)
+#    include <machine/endian.h>  // Older macOS, BSD variants
+#  elif __has_include(<sys/param.h>)
+#    include <sys/param.h>       // MinGW, some BSDs
+#  elif __has_include(<sys/isadefs.h>)
+#    include <sys/isadefs.h>     // Solaris
+#  endif
 #endif
-#endif
 
+// Comprehensive endianness detection
 #if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
-#if (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) ||                                            \
-  (defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN) || (defined(_BYTE_ORDER) && _BYTE_ORDER == _BIG_ENDIAN) ||  \
-  (defined(BYTE_ORDER) && BYTE_ORDER == BIG_ENDIAN) || (defined(__sun) && defined(__SVR4) && defined(_BIG_ENDIAN)) || \
-  defined(__ARMEB__) || defined(__THUMBEB__) || defined(__AARCH64EB__) || defined(_MIBSEB) || defined(__MIBSEB) ||    \
-  defined(__MIBSEB__) || defined(_M_PPC)
+
+/* Big Endian Detection */
+#if (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
+    (defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN) ||             \
+    (defined(_BYTE_ORDER) && _BYTE_ORDER == _BIG_ENDIAN) ||                \
+    (defined(BYTE_ORDER) && BYTE_ORDER == BIG_ENDIAN) ||                   \
+    (defined(__sun) && defined(__SVR4) && defined(_BIG_ENDIAN)) ||         \
+    defined(__ARMEB__) || defined(__THUMBEB__) ||                          \
+    defined(__AARCH64EB__) ||                                              \
+    defined(__MIPSEB__) || defined(__MIPSEB) || defined(_MIPSEB) ||        \
+    defined(__PPC__) || defined(__PPC64__) ||                              \
+    defined(__sparc__) || defined(__sparc) ||                              \
+    defined(__s390__) || defined(__s390x__) ||                             \
+    defined(__hppa__) || defined(__HPPA__) ||                              \
+    defined(_M_PPC) || defined(_ARCH_PPC) ||                               \
+    defined(__BIG_ENDIAN__) ||                                            \
+    defined(__TCS__) ||                                                    \
+    defined(_AIX) || defined(__TOS_AIX__) ||                               \
+    defined(__m68k__) || defined(__MC68K__) ||                             \
+    defined(__ICL)                                                         
 #define __BIG_ENDIAN__
-#elif (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || /* gcc */                           \
-  (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN) /* linux header */ ||                                  \
-  (defined(_BYTE_ORDER) && _BYTE_ORDER == _LITTLE_ENDIAN) ||                                                        \
-  (defined(BYTE_ORDER) && BYTE_ORDER == LITTLE_ENDIAN) /* mingw header */ ||                                        \
-  (defined(__sun) && defined(__SVR4) && defined(_LITTLE_ENDIAN)) || /* solaris */                                   \
-  defined(__ARMEL__) || defined(__THUMBEL__) || defined(__AARCH64EL__) || defined(_MIPSEL) || defined(__MIPSEL) ||  \
-  defined(__MIPSEL__) || defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64) || /* msvc for intel processors */ \
-  defined(_M_ARM) /* msvc code on arm executes in little endian mode */
+
+/* Little Endian Detection */
+#elif (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
+      (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN) ||             \
+      (defined(_BYTE_ORDER) && _BYTE_ORDER == _LITTLE_ENDIAN) ||                \
+      (defined(BYTE_ORDER) && BYTE_ORDER == LITTLE_ENDIAN) ||                   \
+      (defined(__sun) && defined(__SVR4) && defined(_LITTLE_ENDIAN)) ||         \
+      defined(__ARMEL__) || defined(__THUMBEL__) ||                             \
+      defined(__AARCH64EL__) ||                                                 \
+      defined(__MIPSEL__) || defined(__MIPSEL) || defined(_MIPSEL) ||           \
+      defined(__i386__) || defined(__x86_64__) ||                               \
+      defined(__ia64__) || defined(__IA64__) ||                                 \
+      defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64) ||                \
+      defined(_M_ARM) || defined(_M_ARM64) ||                                   \
+      defined(__alpha__) ||                                                     \
+      defined(__riscv) ||                                                       \
+      defined(__LITTLE_ENDIAN__) ||                                             \
+      defined(__amd64__) || defined(__amd64) ||                                 \
+      defined(__e2k__) ||                                                       \
+      defined(__MICROBLAZE__) ||                                                \
+      defined(__ARCEL__) ||                                                     \
+      defined(_WIN32) || defined(_WIN64)                                        
 #define __LITTLE_ENDIAN__
+
+/* Universal Fallback */
+#else
+#  warning "Cannot detect endianness! Assuming little-endian."
+#  define __LITTLE_ENDIAN__  // Most modern systems are little-endian
 #endif
-#endif
+
+#endif // !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
 
 #ifdef bswap16
 #undef bswap16
