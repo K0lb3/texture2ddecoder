@@ -1,0 +1,72 @@
+[build-system]
+requires = [
+    "setuptools<72.2.0", # pp38 fails with higher setuptools
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "texture2ddecoder"
+authors = [{ name = "Rudolf Kolbe", email = "rkolbe96@gmail.com" }]
+description = "a python wrapper for Perfare's Texture2DDecoder"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.7"
+keywords = ["astc", "texture"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/K0lb3/texture2ddecoder"
+"Bug Tracker" = "https://github.com/K0lb3/texture2ddecoder/issues"
+
+[tool.setuptools.dynamic]
+version = { attr = "texture2ddecoder.__version__" }
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "i686", "aarch64", "ppc64le", "s390x", "armv7l"]
+build = "cp37-* pp3*"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+build = "cp37-macosx_x86_64 cp38-macosx_arm64 pp3*"
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64", "x86", "ARM64"]
+build = "cp37-win_amd64 cp37-win32 cp39-win_arm64 pp3*"
+
+# tests
+[project.optional-dependencies]
+tests = ["pytest >= 8.3.3", "pillow >=10.4.0"]
+
+[tool.ruff]
+include = [
+    "pyproject.toml",
+    "texture2ddecoder/*.py",
+    "texture2ddecoder/*.pyi",
+    "tests/*.py",
+]
+
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
