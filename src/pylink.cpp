@@ -135,14 +135,14 @@ static PyObject *_unpack_crunch(PyObject *self, PyObject *args)
 {
     // define vars
     const uint8_t *data;
-    uint32_t data_size;
+    Py_ssize_t data_size;
 
     if (!PyArg_ParseTuple(args, "y#", &data, &data_size))
         return NULL;
 
     void *ret;
     uint32_t retSize;
-    if (!crunch_unpack_level(data, data_size, 0, &ret, &retSize))
+    if (!crunch_unpack_level(data, (uint32_t)data_size, 0, &ret, &retSize))
     {
         return NULL;
     }
@@ -156,14 +156,14 @@ static PyObject *_unpack_unity_crunch(PyObject *self, PyObject *args)
 {
     // define vars
     const uint8_t *data;
-    uint32_t data_size;
+    Py_ssize_t data_size;
 
     if (!PyArg_ParseTuple(args, "y#", &data, &data_size))
         return NULL;
 
     void *ret;
     uint32_t retSize;
-    if (!unity_crunch_unpack_level(data, data_size, 0, &ret, &retSize))
+    if (!unity_crunch_unpack_level(data, (uint32_t)data_size, 0, &ret, &retSize))
     {
         return NULL;
     }
