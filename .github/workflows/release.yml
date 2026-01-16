@@ -44,7 +44,7 @@ jobs:
           submodules: recursive
       
       - name: Build wheels
-        uses: joerick/cibuildwheel@v3
+        uses: joerick/cibuildwheel@v3.3
         env:
           CIBW_TEST_SKIP: "*"
         
@@ -65,7 +65,7 @@ jobs:
           submodules: recursive
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v3
+        uses: joerick/cibuildwheel@v3.3
         env:
           CIBW_SKIP: "*aarch64 *ppc64le *s390x *armv7l *-musllinux*"
           CIBW_TEST_SKIP: "*"
@@ -87,7 +87,7 @@ jobs:
           submodules: recursive
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v3
+        uses: joerick/cibuildwheel@v3.3
         env:
           CIBW_SKIP: "*aarch64 *ppc64le *s390x *armv7l *-manylinux*"
           CIBW_TEST_SKIP: "*"
@@ -114,7 +114,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v3
+        uses: joerick/cibuildwheel@v3.3
         env:
           CIBW_SKIP: "*x86_64 *i686"
           CIBW_TEST_SKIP: "*"
