@@ -4,7 +4,7 @@ A python wrapper for [Perfare](https://github.com/Perfare)'s [Texture2DDecoder](
 Some changes were made to the original code to make it cross-platform compatible.
 """
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 from ._texture2ddecoder import (
     decode_bc1 as decode_bc1,
