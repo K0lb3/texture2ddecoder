@@ -1,17 +1,20 @@
-from setuptools import setup, Extension
 import os
 import platform
-from setuptools.command.build_ext import build_ext
+import sys
+
+from setuptools import Extension, setup
 from wheel.bdist_wheel import bdist_wheel
+
+USE_LIMITED_API = sys.version_info >= (3, 11) and os.getenv("CIBUILDWHEEL") is not None
 
 
 class bdist_wheel_abi3(bdist_wheel):
     def get_tag(self):
         python, abi, plat = super().get_tag()
 
-        if python.startswith("cp"):
-            # on CPython, our wheels are abi3 and compatible back to 3.7
-            return "cp37", "abi3", plat
+        if python.startswith("cp") and USE_LIMITED_API:
+            # on CPython, our wheels are abi3 and compatible back to 3.11
+            return "cp311", "abi3", plat
 
         return python, abi, plat
 
@@ -19,11 +22,11 @@ class bdist_wheel_abi3(bdist_wheel):
 def get_extra_compile_args():
     system = platform.system()
     if system == "Windows":
-        return ["/std:c++14"]
+        return ["/std:c++17"]
     elif system == "Darwin":
-        return ["-std=c++11"]
+        return ["-std=c++17"]
     else:
-        return ["-std=c++11", "-fms-extensions"]
+        return ["-std=c++17", "-fms-extensions"]
 
 
 setup(
@@ -43,10 +46,12 @@ setup(
             language="c++",
             include_dirs=["src/Texture2DDecoder"],
             extra_compile_args=get_extra_compile_args(),
-            py_limited_api=True,
+            py_limited_api=USE_LIMITED_API,
             define_macros=[
-                ("Py_LIMITED_API", "0x03070000"),
-            ],
+                ("Py_LIMITED_API", "0x030B0000"),
+            ]
+            if USE_LIMITED_API
+            else [],
         )
     ],
     cmdclass={"bdist_wheel": bdist_wheel_abi3},

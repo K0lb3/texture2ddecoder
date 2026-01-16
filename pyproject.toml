@@ -19,13 +19,13 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -38,17 +38,19 @@ dynamic = ["version"]
 [tool.setuptools.dynamic]
 version = { attr = "texture2ddecoder.__version__" }
 
+[tool.cibuildwheel]
+build = "cp38-* cp39-* cp310-* cp311-* pp3*"
+enable = ["pypy", "pypy-eol"]
+
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "i686", "aarch64", "ppc64le", "s390x", "armv7l"]
-build = "cp37-* pp3*"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
-build = "cp37-macosx_x86_64 cp38-macosx_arm64 pp3*"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64", "x86", "ARM64"]
-build = "cp37-win_amd64 cp37-win32 cp39-win_arm64 pp3*"
+skip = ["cp38-win_arm64"]
 
 # tests
 [project.optional-dependencies]

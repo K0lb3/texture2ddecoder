@@ -16,61 +16,46 @@
  *
  ************************************************
  */
-typedef int (*decode_func_t)(const uint8_t *, const long, const long, uint32_t *);
-
-template <decode_func_t DECODE>
+template <auto DecodeFunc, typename DimensionType, char DimensionChar>
 static PyObject *decode(PyObject *self, PyObject *args)
 {
     // define vars
-    const uint8_t *data;
-    size_t data_size;
-    uint32_t width, height;
+    Py_buffer view;
+    DimensionType width, height;
+    char fmt[] = {'y', '*', DimensionChar, DimensionChar, '\0'};
 
-    if (!PyArg_ParseTuple(args, "y#ii", &data, &data_size, &width, &height))
+    if (!PyArg_ParseTuple(args, fmt, &view, &width, &height))
         return NULL;
 
     // reserve return image
     PyObject *res = PyBytes_FromStringAndSize(nullptr, width * height * 4);
     if (res == NULL)
+    {
+        PyBuffer_Release(&view);
         return PyErr_NoMemory();
-
-    uint32_t *buf = (uint32_t *)PyBytes_AsString(res);
-
+    }
     // decode
-    if (!DECODE(data, width, height, buf))
-        return NULL;
+    const uint8_t *texture_data = reinterpret_cast<const uint8_t *>(view.buf);
+    uint32_t *image_data = reinterpret_cast<uint32_t *>(PyBytes_AsString(res));
+    auto decode_result = DecodeFunc(texture_data, width, height, image_data);
+    PyBuffer_Release(&view);
 
+    // check decode result
+    if (!decode_result)
+    {
+        Py_DECREF(res);
+        PyErr_SetString(PyExc_RuntimeError, "Decoding failed");
+        return NULL;
+    }
     // return
     return res;
 }
 
-typedef int (*decode_func_bc_t)(const uint8_t *, uint32_t, uint32_t, uint32_t *);
+template <auto DecodeFunc>
+auto decode_l = decode<DecodeFunc, long, 'l'>;
 
-template <decode_func_bc_t DECODE>
-static PyObject *decode_bc(PyObject *self, PyObject *args)
-{
-    // define vars
-    const uint8_t *data;
-    size_t data_size;
-    uint32_t width, height;
-
-    if (!PyArg_ParseTuple(args, "y#ii", &data, &data_size, &width, &height))
-        return NULL;
-
-    // reserve return image
-    PyObject *res = PyBytes_FromStringAndSize(nullptr, width * height * 4);
-    if (res == NULL)
-        return PyErr_NoMemory();
-
-    uint32_t *buf = (uint32_t *)PyBytes_AsString(res);
-
-    // decode
-    if (!DECODE(data, width, height, buf))
-        return NULL;
-
-    // return
-    return res;
-}
+template <auto DecodeFunc>
+auto decode_u32 = decode<DecodeFunc, int, 'I'>;
 
 /*
  *************************************************
@@ -83,25 +68,32 @@ static PyObject *decode_bc(PyObject *self, PyObject *args)
 static PyObject *_decode_pvrtc(PyObject *self, PyObject *args)
 {
     // define vars
-    const uint8_t *data;
-    size_t data_size;
-    uint32_t width, height;
+    Py_buffer view;
+    long width, height;
     uint8_t is2bpp = 0;
 
-    if (!PyArg_ParseTuple(args, "y#ii|b", &data, &data_size, &width, &height, &is2bpp))
+    if (!PyArg_ParseTuple(args, "y*ll|b", &view, &width, &height, &is2bpp))
         return NULL;
 
     // reserve return image
     PyObject *res = PyBytes_FromStringAndSize(nullptr, width * height * 4);
     if (res == NULL)
+    {
+        PyBuffer_Release(&view);
         return PyErr_NoMemory();
-
-    uint32_t *buf = (uint32_t *)PyBytes_AsString(res);
-
+    }
     // decode
-    if (!decode_pvrtc(data, width, height, buf, is2bpp ? 1 : 0))
+    const uint8_t *texture_data = reinterpret_cast<const uint8_t *>(view.buf);
+    uint32_t *image_data = reinterpret_cast<uint32_t *>(PyBytes_AsString(res));
+    auto decode_result = decode_pvrtc(texture_data, width, height, image_data, is2bpp ? 1 : 0);
+    PyBuffer_Release(&view);
+    // check decode result
+    if (!decode_result)
+    {
+        Py_DECREF(res);
+        PyErr_SetString(PyExc_RuntimeError, "Decoding failed");
         return NULL;
-
+    }
     // return
     return res;
 }
@@ -109,67 +101,64 @@ static PyObject *_decode_pvrtc(PyObject *self, PyObject *args)
 static PyObject *_decode_astc(PyObject *self, PyObject *args)
 {
     // define vars
-    const uint8_t *data;
-    size_t data_size;
+    Py_buffer view;
     uint32_t width, height, block_width, block_height;
 
-    if (!PyArg_ParseTuple(args, "y#iiii", &data, &data_size, &width, &height, &block_width, &block_height))
+    if (!PyArg_ParseTuple(args, "y*IIII", &view, &width, &height, &block_width, &block_height))
         return NULL;
 
     // reserve return image - always BGRA
     PyObject *res = PyBytes_FromStringAndSize(nullptr, width * height * 4);
     if (res == NULL)
+    {
+        PyBuffer_Release(&view);
         return PyErr_NoMemory();
-
-    uint32_t *buf = (uint32_t *)PyBytes_AsString(res);
-
+    }
     // decode
-    if (!decode_astc(data, width, height, block_width, block_height, buf))
+    const uint8_t *texture_data = reinterpret_cast<const uint8_t *>(view.buf);
+    uint32_t *image_data = reinterpret_cast<uint32_t *>(PyBytes_AsString(res));
+    auto decode_result = decode_astc(texture_data, width, height, block_width, block_height, image_data);
+    PyBuffer_Release(&view);
+    // check decode result
+    if (!decode_result)
+    {
+        Py_DECREF(res);
+        PyErr_SetString(PyExc_RuntimeError, "Decoding failed");
         return NULL;
-
+    }
     // return
     return res;
 }
 
-static PyObject *_unpack_crunch(PyObject *self, PyObject *args)
+typedef bool (*CrunchUnpackFunc_t)(const uint8_t *, uint32_t, uint32_t, void **, uint32_t *);
+template <CrunchUnpackFunc_t CrunchUnpackFunc>
+static PyObject *unpack_crunch(PyObject *self, PyObject *args)
 {
     // define vars
-    const uint8_t *data;
-    Py_ssize_t data_size;
+    Py_buffer view;
+    uint32_t level_index = 0;
 
-    if (!PyArg_ParseTuple(args, "y#", &data, &data_size))
+    if (!PyArg_ParseTuple(args, "y*|I", &view, &level_index))
         return NULL;
 
-    void *ret;
+    // unpack
+    const uint8_t *crunch_data = reinterpret_cast<const uint8_t *>(view.buf);
+    uint8_t *image_data = nullptr;
     uint32_t retSize;
-    if (!crunch_unpack_level(data, (uint32_t)data_size, 0, &ret, &retSize))
+    auto unpack_result = CrunchUnpackFunc(crunch_data, static_cast<uint32_t>(view.len), level_index, reinterpret_cast<void **>(&image_data), &retSize);
+    PyBuffer_Release(&view);
+    if (!unpack_result)
     {
+        if (image_data)
+        {
+            delete[] image_data;
+        }
+        PyErr_SetString(PyExc_RuntimeError, "Unpacking failed");
         return NULL;
     }
 
-    PyObject *res = Py_BuildValue("y#", ret, retSize);
-    delete ret;
-    return res;
-}
-
-static PyObject *_unpack_unity_crunch(PyObject *self, PyObject *args)
-{
-    // define vars
-    const uint8_t *data;
-    Py_ssize_t data_size;
-
-    if (!PyArg_ParseTuple(args, "y#", &data, &data_size))
-        return NULL;
-
-    void *ret;
-    uint32_t retSize;
-    if (!unity_crunch_unpack_level(data, (uint32_t)data_size, 0, &ret, &retSize))
-    {
-        return NULL;
-    }
-
-    PyObject *res = Py_BuildValue("y#", ret, retSize);
-    delete ret;
+    PyObject *res = Py_BuildValue("y#", image_data, retSize);
+    delete[] image_data;
     return res;
 }
 
@@ -184,11 +173,11 @@ static PyObject *_unpack_unity_crunch(PyObject *self, PyObject *args)
 // Exported methods are collected in a table
 static struct PyMethodDef method_table[] = {
     {"decode_bc1",
-     (PyCFunction)decode<decode_bc1>,
+     (PyCFunction)decode_l<decode_bc1>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_bc3",
-     (PyCFunction)decode<decode_bc3>,
+     (PyCFunction)decode_l<decode_bc3>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_pvrtc",
@@ -196,59 +185,59 @@ static struct PyMethodDef method_table[] = {
      METH_VARARGS,
      "bytes data, long w, long h, bytes image, bool is2bpp"},
     {"decode_etc1",
-     (PyCFunction)decode<decode_etc1>,
+     (PyCFunction)decode_l<decode_etc1>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_etc2",
-     (PyCFunction)decode<decode_etc2>,
+     (PyCFunction)decode_l<decode_etc2>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_etc2a1",
-     (PyCFunction)decode<decode_etc2a1>,
+     (PyCFunction)decode_l<decode_etc2a1>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_etc2a8",
-     (PyCFunction)decode<decode_etc2a8>,
+     (PyCFunction)decode_l<decode_etc2a8>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_eacr",
-     (PyCFunction)decode<decode_eacr>,
+     (PyCFunction)decode_l<decode_eacr>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_eacr_signed",
-     (PyCFunction)decode<decode_eacr_signed>,
+     (PyCFunction)decode_l<decode_eacr_signed>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_eacrg",
-     (PyCFunction)decode<decode_eacrg>,
+     (PyCFunction)decode_l<decode_eacrg>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_eacrg_signed",
-     (PyCFunction)decode<decode_eacrg_signed>,
+     (PyCFunction)decode_l<decode_eacrg_signed>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_bc4",
-     (PyCFunction)decode_bc<decode_bc4>,
+     (PyCFunction)decode_u32<decode_bc4>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_bc5",
-     (PyCFunction)decode_bc<decode_bc5>,
+     (PyCFunction)decode_u32<decode_bc5>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_bc6",
-     (PyCFunction)decode_bc<decode_bc6>,
+     (PyCFunction)decode_u32<decode_bc6>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_bc7",
-     (PyCFunction)decode_bc<decode_bc7>,
+     (PyCFunction)decode_u32<decode_bc7>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_atc_rgb4",
-     (PyCFunction)decode_bc<decode_atc_rgb4>,
+     (PyCFunction)decode_u32<decode_atc_rgb4>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_atc_rgba8",
-     (PyCFunction)decode_bc<decode_atc_rgba8>,
+     (PyCFunction)decode_u32<decode_atc_rgba8>,
      METH_VARARGS,
      "bytes data, long w, long h, bytes image"},
     {"decode_astc",
@@ -256,11 +245,11 @@ static struct PyMethodDef method_table[] = {
      METH_VARARGS,
      "bytes data, long w, long h, int bw, int bh, bytes image"},
     {"unpack_crunch",
-     (PyCFunction)_unpack_crunch,
+     (PyCFunction)unpack_crunch<crunch_unpack_level>,
      METH_VARARGS,
      "bytes data"},
     {"unpack_unity_crunch",
-     (PyCFunction)_unpack_unity_crunch,
+     (PyCFunction)unpack_crunch<unity_crunch_unpack_level>,
      METH_VARARGS,
      "bytes data"},
     {NULL,
