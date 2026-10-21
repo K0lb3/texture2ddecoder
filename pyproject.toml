@@ -56,6 +56,10 @@ archs = ["x86_64", "arm64"]
 archs = ["AMD64", "x86", "ARM64"]
 skip = ["cp38-win_arm64"]
 
+[tool.cibuildwheel.pyodide]
+test-extras = ["tests"]
+test-command = "python -m pytest -v {project}/tests"
+
 # tests
 [project.optional-dependencies]
 tests = ["pytest >= 8.3.3", "pillow >=10.4.0"]
