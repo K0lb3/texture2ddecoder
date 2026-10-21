@@ -1,6 +1,10 @@
 [build-system]
 requires = [
-    "setuptools<72.2.0", # pp38 fails with higher setuptools
+    # setuptools >= 72.2.0 compiles C++ sources with the C++ compiler ($CXX)
+    # instead of the C compiler ($CC); older versions pass .cpp files to $CC,
+    # which breaks cross-compilers where cc and c++ are separate wrappers.
+    "setuptools>=72.2.0; python_version >= '3.9'",
+    "setuptools<72.2.0; python_version < '3.9'", # pp38 fails with higher setuptools
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
@@ -51,6 +55,10 @@ archs = ["x86_64", "arm64"]
 [tool.cibuildwheel.windows]
 archs = ["AMD64", "x86", "ARM64"]
 skip = ["cp38-win_arm64"]
+
+[tool.cibuildwheel.pyodide]
+test-extras = ["tests"]
+test-command = "python -m pytest -v {project}/tests"
 
 # tests
 [project.optional-dependencies]
